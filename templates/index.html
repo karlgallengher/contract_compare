@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文档对比工作台</title>
+<style>
+:root {
+    --bg: #f5f6f8;
+    --panel: #ffffff;
+    --panel-soft: #f7f8fb;
+    --ink: #15171a;
+    --muted: #6f7682;
+    --line: #e4e7ec;
+    --blue: #2f5bff;
+    --blue-soft: #eef2ff;
+    --danger: #c24141;
+    --ok: #287a4d;
+    --warn: #9a6a00;
+    --shadow: 0 16px 38px rgba(20, 27, 43, .08);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+    color: var(--ink);
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+}
+
+button, input { font: inherit; }
+
+.app {
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+}
+
+.sidebar {
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    background: #f7f8fa;
+    border-right: 1px solid var(--line);
+}
+
+.logo {
+    height: 54px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 14px;
+    font-size: 20px;
+    font-weight: 850;
+}
+
+.logo-mark {
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    color: #fff;
+    background: var(--blue);
+    font-size: 16px;
+    font-weight: 850;
+}
+
+.side-nav {
+    display: grid;
+    gap: 8px;
+    padding: 8px;
+    border-bottom: 1px solid var(--line);
+}
+
+.side-link,
+.side-action {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--ink);
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.side-action {
+    color: var(--blue);
+    background: var(--blue-soft);
+    border-color: rgba(47, 91, 255, .26);
+}
+
+.mode-select {
+    width: 100%;
+    height: 38px;
+    padding: 0 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.side-link:hover,
+.side-action:hover {
+    background: #eef1f6;
+}
+
+.nav-icon {
+    width: 18px;
+    text-align: center;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.upload-list {
+    min-height: 0;
+    overflow: auto;
+    padding: 10px 8px;
+}
+
+.upload-card {
+    min-height: 68px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.upload-card.ready {
+    background: #fff;
+    border-color: var(--line);
+    box-shadow: 0 10px 24px rgba(28, 35, 54, .06);
+}
+
+.upload-card input { display: none; }
+
+.upload-button {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    color: var(--blue);
+    background: #fff;
+    font-size: 18px;
+    font-weight: 900;
+}
+
+.file-meta { min-width: 0; }
+
+.file-label {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.file-name {
+    margin-top: 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 14px;
+    font-weight: 750;
+}
+
+.workspace {
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: 54px 1fr;
+    background: #fff;
+}
+
+.docbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--line);
+}
+
+.doc-title {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.doc-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 19px;
+    font-weight: 750;
+}
+
+.doc-subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.compare-button {
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 10px;
+    color: #fff;
+    background: var(--blue);
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 850;
+}
+
+.compare-button:disabled {
+    color: #9aa2af;
+    background: #e2e6ee;
+    cursor: not-allowed;
+}
+
+.stage {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    background: #f2f3f5;
+}
+
+.viewer {
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.panel,
+.side-pane {
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: 52px 1fr;
+    background: #fff;
+}
+
+.panel + .panel,
+.side-pane {
+    border-left: 1px solid var(--line);
+}
+
+.panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--line);
+    background: #fff;
+}
+
+.panel-title {
+    font-size: 17px;
+    font-weight: 800;
+}
+
+.panel-hint {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.pages,
+.diff-list {
+    min-height: 0;
+    overflow: auto;
+    padding: 18px;
+    background: #f2f3f5;
+}
+
+.page {
+    position: relative;
+    width: min(100%, 760px);
+    margin: 0 auto 28px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .06);
+}
+
+.page img {
+    width: 100%;
+    display: block;
+}
+
+.page-foot {
+    padding: 9px 12px;
+    text-align: center;
+    color: var(--muted);
+    background: #fff;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+}
+
+.table-wrap {
+    min-width: 100%;
+    overflow: auto;
+    background: #fff;
+    border: 1px solid var(--line);
+}
+
+.table-diff {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.table-diff th,
+.table-diff td {
+    min-width: 90px;
+    max-width: 260px;
+    padding: 7px 9px;
+    border: 1px solid var(--line);
+    vertical-align: top;
+    word-break: break-word;
+}
+
+.table-diff th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #f7f8fb;
+    color: var(--muted);
+    font-weight: 800;
+}
+
+.table-diff .row-head {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    min-width: 46px;
+    background: #f7f8fb;
+    color: var(--muted);
+    text-align: right;
+    font-weight: 800;
+}
+
+.table-diff .cell-modified { background: rgba(255, 217, 0, .42); }
+.table-diff .cell-added { background: rgba(50, 190, 105, .34); }
+.table-diff .cell-deleted { background: rgba(230, 70, 70, .32); }
+.table-diff .cell-active { outline: 2px solid var(--blue); outline-offset: -2px; }
+
+.side-pane {
+    grid-template-rows: 52px auto 1fr;
+}
+
+.scoreboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 12px;
+    border-bottom: 1px solid var(--line);
+    background: #fff;
+}
+
+.stat {
+    padding: 10px;
+    border-radius: 10px;
+    background: var(--panel-soft);
+    border: 1px solid var(--line);
+}
+
+.stat strong {
+    display: block;
+    font-size: 22px;
+    line-height: 1;
+}
+
+.stat span {
+    display: block;
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.diff-list {
+    padding: 12px;
+    background: #fff;
+}
+
+.diff-item {
+    width: 100%;
+    display: block;
+    margin: 0 0 10px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    text-align: left;
+    background: #fff;
+    cursor: pointer;
+}
+
+.diff-item:hover,
+.diff-item.active {
+    border-color: rgba(47, 91, 255, .38);
+    background: var(--blue-soft);
+}
+
+.diff-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.tag {
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.tag.modified { color: var(--warn); background: #fff4cc; }
+.tag.deleted { color: #9f3333; background: #ffe1e1; }
+.tag.added { color: var(--ok); background: #dcf3e6; }
+.tag.signature { color: #245486; background: #dcecff; }
+.tag.extra { color: #613e88; background: #eadff7; }
+
+.page-ref {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.preview {
+    margin-top: 8px;
+    color: #3f4651;
+    font-size: 12px;
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.empty,
+.loading,
+.error {
+    min-height: 210px;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    color: var(--muted);
+    text-align: center;
+    font-size: 14px;
+}
+
+.loading {
+    gap: 10px;
+}
+
+.spinner {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 3px solid #dce2ee;
+    border-top-color: var(--blue);
+    animation: spin .8s linear infinite;
+}
+
+.error {
+    color: var(--danger);
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (max-width: 1180px) {
+    .stage {
+        grid-template-columns: 1fr;
+        overflow: auto;
+    }
+    .side-pane {
+        min-height: 420px;
+        border-left: 0;
+        border-top: 1px solid var(--line);
+    }
+}
+
+@media (max-width: 860px) {
+    body { overflow: auto; }
+    .app {
+        min-height: 100vh;
+        height: auto;
+        grid-template-columns: 1fr;
+    }
+    .sidebar {
+        min-height: auto;
+    }
+    .upload-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding: 10px;
+    }
+    .upload-card {
+        margin: 0;
+    }
+    .viewer {
+        grid-template-columns: 1fr;
+    }
+    .panel + .panel {
+        border-left: 0;
+        border-top: 1px solid var(--line);
+    }
+}
+</style>
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="logo">
+            <div class="logo-mark">文</div>
+            <span>文档对比</span>
+        </div>
+        <nav class="side-nav">
+            <a class="side-link" href="/"><span class="nav-icon">←</span><span>MinerU 解析</span></a>
+            <select class="mode-select" id="compareMode" title="对比类型">
+                <option value="contract" selected>合同模式</option>
+                <option value="document">普通文档</option>
+                <option value="table">表格模式</option>
+            </select>
+            <button class="side-action" type="button" id="btnCompare" disabled><span class="nav-icon">✓</span><span>开始对比</span></button>
+        </nav>
+        <div class="upload-list">
+            <label class="upload-card" id="beforeCard">
+                <input type="file" id="fileBefore" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv">
+                <span class="upload-button" title="上传原始文件">+</span>
+                <span class="file-meta">
+                    <span class="file-label">原始文件</span>
+                    <span class="file-name" id="nameBefore">未选择文件</span>
+                </span>
+            </label>
+            <label class="upload-card" id="afterCard">
+                <input type="file" id="fileAfter" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv">
+                <span class="upload-button" title="上传对比文件">+</span>
+                <span class="file-meta">
+                    <span class="file-label">对比文件</span>
+                    <span class="file-name" id="nameAfter">未选择文件</span>
+                </span>
+            </label>
+        </div>
+    </aside>
+
+    <main class="workspace">
+        <header class="docbar">
+            <div class="doc-title">
+                <div>
+                    <div class="doc-name">文档对比工作台</div>
+                    <div class="doc-subtitle">并排查看、同步滚动、点击差异定位页面</div>
+                </div>
+            </div>
+            <div class="doc-subtitle" id="statusText">未开始</div>
+        </header>
+
+        <section class="stage">
+            <section class="viewer">
+                <article class="panel">
+                    <div class="panel-head">
+                        <span class="panel-title">原始文档</span>
+                        <span class="panel-hint" id="beforePages">等待上传</span>
+                    </div>
+                    <div class="pages" id="leftPanel">
+                        <div class="empty">上传原始文件后显示页面</div>
+                    </div>
+                </article>
+
+                <article class="panel">
+                    <div class="panel-head">
+                        <span class="panel-title">对比文档</span>
+                        <span class="panel-hint" id="afterPages">等待上传</span>
+                    </div>
+                    <div class="pages" id="rightPanel">
+                        <div class="empty">上传对比文件后显示页面</div>
+                    </div>
+                </article>
+            </section>
+
+            <aside class="side-pane">
+                <div class="panel-head">
+                    <span class="panel-title">差异清单</span>
+                    <span class="panel-hint">结果</span>
+                </div>
+                <div class="scoreboard">
+                    <div class="stat"><strong id="totalCount">0</strong><span>全部</span></div>
+                    <div class="stat"><strong id="changeCount">0</strong><span>修改/删增</span></div>
+                    <div class="stat"><strong id="otherCount">0</strong><span>签署/附件</span></div>
+                </div>
+                <div class="diff-list" id="diffList">
+                    <div class="empty">对比完成后在这里查看差异</div>
+                </div>
+            </aside>
+        </section>
+    </main>
+</div>
+
+<script>
+const state = {
+    diffs: [],
+    tableResult: null,
+    busy: false
+};
+
+const $ = (id) => document.getElementById(id);
+const fileBefore = $("fileBefore");
+const fileAfter = $("fileAfter");
+const compareMode = $("compareMode");
+const btnCompare = $("btnCompare");
+const leftPanel = $("leftPanel");
+const rightPanel = $("rightPanel");
+const diffList = $("diffList");
+let syncingScroll = false;
+let lastLeftScroll = 0;
+let lastRightScroll = 0;
+let detachedSource = null;
+let detachedTarget = null;
+let detachedGap = 0;
+
+const labels = {
+    modified: ["修改", "modified"],
+    deleted: ["删除", "deleted"],
+    added: ["新增", "added"],
+    signature: ["签署区", "signature"],
+    extra: ["附加内容", "extra"],
+    table_modified: ["单元格修改", "modified"],
+    table_added: ["表格新增", "added"],
+    table_deleted: ["表格删除", "deleted"]
+};
+
+fileBefore.addEventListener("change", () => selectFile("before"));
+fileAfter.addEventListener("change", () => selectFile("after"));
+btnCompare.addEventListener("click", compareContracts);
+leftPanel.addEventListener("scroll", () => syncPanels(leftPanel, rightPanel));
+rightPanel.addEventListener("scroll", () => syncPanels(rightPanel, leftPanel));
+
+function selectFile(side) {
+    const input = side === "before" ? fileBefore : fileAfter;
+    const card = side === "before" ? $("beforeCard") : $("afterCard");
+    const name = side === "before" ? $("nameBefore") : $("nameAfter");
+    const file = input.files[0];
+
+    card.classList.toggle("ready", Boolean(file));
+    name.textContent = file ? file.name : "未选择文件";
+    updateCompareButton();
+}
+
+function updateCompareButton() {
+    btnCompare.disabled = state.busy || !fileBefore.files[0] || !fileAfter.files[0];
+}
+
+async function compareContracts() {
+    state.busy = true;
+    updateCompareButton();
+    $("statusText").textContent = "解析中";
+    leftPanel.innerHTML = loadingView("正在解析原始文档");
+    rightPanel.innerHTML = loadingView("正在解析对比文档");
+    diffList.innerHTML = loadingView("正在识别差异");
+    resetStats();
+
+    const formData = new FormData();
+    formData.append("file_before", fileBefore.files[0]);
+    formData.append("file_after", fileAfter.files[0]);
+    formData.append("compare_mode", compareMode.value);
+
+    try {
+        const response = await fetch("/compare", { method: "POST", body: formData });
+        if (!response.ok) throw new Error(`服务返回 ${response.status}`);
+        const submitted = await response.json();
+        const result = await waitCompareDone(submitted.task_id || submitted.compare_task_id);
+
+        state.diffs = Array.isArray(result.diffs) ? result.diffs : [];
+        state.tableResult = result.table_result || null;
+        if (result.compare_mode === "table" && state.tableResult) {
+            renderTables(state.tableResult);
+        } else {
+            renderPDFs(result.before_images || [], result.after_images || []);
+        }
+        renderDiffs();
+        $("statusText").textContent = state.diffs.length ? "已完成" : "无差异";
+    } catch (error) {
+        leftPanel.innerHTML = errorView("对比失败，请检查后端日志或文件格式");
+        rightPanel.innerHTML = errorView(error.message || "未知错误");
+        diffList.innerHTML = errorView("没有生成差异结果");
+        $("statusText").textContent = "失败";
+    } finally {
+        state.busy = false;
+        updateCompareButton();
+    }
+}
+
+async function waitCompareDone(taskId) {
+    if (!taskId) throw new Error("missing compare task id");
+    while (true) {
+        const response = await fetch(`/compare/${encodeURIComponent(taskId)}`);
+        if (!response.ok) throw new Error(`query task failed ${response.status}`);
+        const result = await response.json();
+        $("statusText").textContent = result.message || result.status || "running";
+        if (result.status === "done") return result;
+        if (result.status === "failed") throw new Error(result.error || "compare failed");
+        await sleep(2000);
+    }
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function renderPDFs(beforeImages, afterImages) {
+    state.tableResult = null;
+    leftPanel.innerHTML = renderPages(beforeImages, "L") || '<div class="empty">原始文档没有可显示页面</div>';
+    rightPanel.innerHTML = renderPages(afterImages, "R") || '<div class="empty">对比文档没有可显示页面</div>';
+    leftPanel.scrollTop = 0;
+    rightPanel.scrollTop = 0;
+    lastLeftScroll = 0;
+    lastRightScroll = 0;
+    detachedSource = null;
+    detachedTarget = null;
+    detachedGap = 0;
+    $("beforePages").textContent = `${beforeImages.length} 页`;
+    $("afterPages").textContent = `${afterImages.length} 页`;
+}
+
+function renderPages(images, prefix) {
+    return images.map((img, index) => `
+        <div class="page">
+            <img src="data:image/png;base64,${img}" id="${prefix}${index}" alt="第 ${index + 1} 页">
+            <div class="page-foot">第 ${index + 1} 页</div>
+        </div>
+    `).join("");
+}
+
+function renderTables(result) {
+    leftPanel.innerHTML = renderTable(result.before_rows || [], "B", result.diffs || []);
+    rightPanel.innerHTML = renderTable(result.after_rows || [], "A", result.diffs || []);
+    leftPanel.scrollTop = 0;
+    rightPanel.scrollTop = 0;
+    $("beforePages").textContent = `${(result.before_rows || []).length} 行`;
+    $("afterPages").textContent = `${(result.after_rows || []).length} 行`;
+}
+
+function renderTable(rows, side, diffs) {
+    const width = Math.max(1, ...rows.map((row) => row.length));
+    const marks = buildTableMarks(diffs, side);
+    const head = Array.from({ length: width }, (_, col) => `<th>${excelColumn(col)}</th>`).join("");
+    const body = rows.map((row, rowIndex) => {
+        const cells = Array.from({ length: width }, (_, col) => {
+            const mark = marks.get(`${rowIndex}:${col}`) || marks.get(`${rowIndex}:*`) || "";
+            return `<td id="${side}-${rowIndex}-${col}" class="${mark}">${escapeHtml(row[col] || "")}</td>`;
+        }).join("");
+        return `<tr><th class="row-head">${rowIndex + 1}</th>${cells}</tr>`;
+    }).join("");
+    return `<div class="table-wrap"><table class="table-diff"><thead><tr><th class="row-head"></th>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+}
+
+function buildTableMarks(diffs, side) {
+    const marks = new Map();
+    diffs.forEach((diff) => {
+        const cls = diff.type === "table_modified" ? "cell-modified" : diff.type === "table_added" ? "cell-added" : "cell-deleted";
+        const row = side === "B" ? diff.before_row : diff.after_row;
+        if (row === null || row === undefined) return;
+        if (diff.col === undefined || diff.col === null) {
+            marks.set(`${row}:*`, cls);
+        } else {
+            marks.set(`${row}:${diff.col}`, cls);
+        }
+    });
+    return marks;
+}
+
+function excelColumn(index) {
+    let n = index + 1;
+    let name = "";
+    while (n > 0) {
+        const rem = (n - 1) % 26;
+        name = String.fromCharCode(65 + rem) + name;
+        n = Math.floor((n - 1) / 26);
+    }
+    return name;
+}
+
+function renderDiffs() {
+    updateStats();
+
+    if (!state.diffs.length) {
+        diffList.innerHTML = '<div class="empty">未发现实质差异</div>';
+        return;
+    }
+
+    diffList.innerHTML = state.diffs.map((diff, index) => {
+        const [text, className] = labels[diff.type] || ["差异", "modified"];
+        const preview = escapeHtml(diff.old_text || diff.new_text || diff.text || "点击查看对应页");
+        const location = diff.type?.startsWith("table_")
+            ? `${diff.sheet || "Sheet"} ${diff.text || ""}`
+            : `第 ${(diff.page || 0) + 1} 页`;
+        return `
+            <button class="diff-item" type="button" id="diff-${index}" onclick="goToDiff(${index})">
+                <span class="diff-top">
+                    <span class="tag ${className}">${text}</span>
+                    <span class="page-ref">${escapeHtml(location)}</span>
+                </span>
+                <span class="preview">${preview}</span>
+            </button>
+        `;
+    }).join("");
+}
+
+function updateStats() {
+    const total = state.diffs.length;
+    const change = state.diffs.filter((d) => ["modified", "deleted", "added", "table_modified", "table_deleted", "table_added"].includes(d.type)).length;
+    const other = total - change;
+    $("totalCount").textContent = total;
+    $("changeCount").textContent = change;
+    $("otherCount").textContent = other;
+}
+
+function resetStats() {
+    state.diffs = [];
+    state.tableResult = null;
+    updateStats();
+    $("beforePages").textContent = "处理中";
+    $("afterPages").textContent = "处理中";
+}
+
+function goToDiff(index) {
+    document.querySelectorAll(".diff-item").forEach((item) => item.classList.remove("active"));
+    const active = $(`diff-${index}`);
+    if (active) active.classList.add("active");
+
+    const diff = state.diffs[index];
+    if (diff?.type?.startsWith("table_")) {
+        goToTableDiff(diff);
+        return;
+    }
+
+    const page = diff?.page || 0;
+    const leftPage = $(`L${page}`);
+    const rightPage = $(`R${page}`);
+    if (!leftPage && !rightPage) return;
+
+    syncingScroll = true;
+    detachedSource = null;
+    detachedTarget = null;
+    detachedGap = 0;
+
+    if (leftPage) {
+        leftPanel.scrollTo({
+            top: clampScrollTop(leftPanel, getPanelOffsetTop(leftPage, leftPanel) - leftPanel.clientHeight / 2),
+            behavior: "smooth"
+        });
+    }
+    if (rightPage) {
+        rightPanel.scrollTo({
+            top: clampScrollTop(rightPanel, getPanelOffsetTop(rightPage, rightPanel) - rightPanel.clientHeight / 2),
+            behavior: "smooth"
+        });
+    }
+
+    window.setTimeout(() => {
+        lastLeftScroll = leftPanel.scrollTop;
+        lastRightScroll = rightPanel.scrollTop;
+        syncingScroll = false;
+    }, 350);
+}
+
+function goToTableDiff(diff) {
+    document.querySelectorAll(".cell-active").forEach((cell) => cell.classList.remove("cell-active"));
+    const col = diff.col ?? 0;
+    const beforeCell = diff.before_row === null || diff.before_row === undefined ? null : $(`B-${diff.before_row}-${col}`);
+    const afterCell = diff.after_row === null || diff.after_row === undefined ? null : $(`A-${diff.after_row}-${col}`);
+    [beforeCell, afterCell].forEach((cell) => {
+        if (cell) {
+            cell.classList.add("cell-active");
+            cell.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
+        }
+    });
+}
+
+function getPanelOffsetTop(element, panel) {
+    let top = element.offsetTop;
+    let current = element.offsetParent;
+    while (current && current !== panel) {
+        top += current.offsetTop;
+        current = current.offsetParent;
+    }
+    return top;
+}
+
+function clampScrollTop(panel, value) {
+    return Math.max(0, Math.min(value, panel.scrollHeight - panel.clientHeight));
+}
+
+function syncPanels(source, target) {
+    if (syncingScroll) return;
+    const isLeftSource = source === leftPanel;
+    const lastSourceScroll = isLeftSource ? lastLeftScroll : lastRightScroll;
+    const delta = source.scrollTop - lastSourceScroll;
+    if (delta === 0) return;
+
+    syncingScroll = true;
+    if (detachedSource === source && detachedTarget === target) {
+        const nextGap = detachedGap + delta;
+        const stillDetached = Math.sign(nextGap) === Math.sign(detachedGap) && Math.abs(nextGap) > 0.5;
+
+        if (stillDetached) {
+            detachedGap = nextGap;
+        } else {
+            detachedSource = null;
+            detachedTarget = null;
+            detachedGap = 0;
+            target.scrollTop += nextGap;
+        }
+    } else {
+        detachedSource = null;
+        detachedTarget = null;
+        detachedGap = 0;
+
+        const beforeTargetScroll = target.scrollTop;
+        target.scrollTop += delta;
+        const appliedDelta = target.scrollTop - beforeTargetScroll;
+        const unappliedDelta = delta - appliedDelta;
+
+        if (Math.abs(unappliedDelta) > 0.5) {
+            detachedSource = source;
+            detachedTarget = target;
+            detachedGap = unappliedDelta;
+        }
+    }
+
+    lastLeftScroll = leftPanel.scrollTop;
+    lastRightScroll = rightPanel.scrollTop;
+    requestAnimationFrame(() => {
+        syncingScroll = false;
+    });
+}
+
+function loadingView(text) {
+    return `<div class="loading"><div class="spinner"></div><div>${text}</div></div>`;
+}
+
+function errorView(text) {
+    return `<div class="error">${escapeHtml(text)}</div>`;
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+</script>
+</body>
+</html>

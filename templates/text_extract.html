@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文字提取</title>
+<style>
+:root {
+    --bg: #f5f6f8;
+    --panel: #ffffff;
+    --ink: #15171a;
+    --muted: #6f7682;
+    --line: #e4e7ec;
+    --blue: #2f5bff;
+    --blue-soft: #eef2ff;
+    --danger: #c24141;
+}
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--ink);
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+}
+button, input { font: inherit; }
+.page {
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: 66px 1fr;
+}
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 0 28px;
+    border-bottom: 1px solid var(--line);
+    background: #fff;
+}
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 22px;
+    font-weight: 850;
+}
+.brand-mark {
+    width: 24px;
+    height: 24px;
+    border: 3px solid #111;
+    border-top-color: transparent;
+    border-radius: 0 0 16px 16px;
+    transform: rotate(-10deg);
+}
+.nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.nav a {
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--blue);
+    background: #fff;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 800;
+}
+.workspace {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 360px minmax(0, 1fr);
+    gap: 0;
+}
+.panel {
+    min-width: 0;
+    background: #fff;
+}
+.left {
+    border-right: 1px solid var(--line);
+    padding: 28px;
+}
+.right {
+    display: grid;
+    grid-template-rows: 62px 1fr;
+}
+.panel-title {
+    margin: 0 0 12px;
+    font-size: 22px;
+    font-weight: 850;
+}
+.hint {
+    margin: 0 0 22px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.7;
+}
+.dropzone {
+    min-height: 180px;
+    display: grid;
+    place-items: center;
+    padding: 22px;
+    border: 1.5px dashed #b7c0d1;
+    border-radius: 16px;
+    background: #fbfcff;
+    cursor: pointer;
+    text-align: center;
+}
+.dropzone input { display: none; }
+.file-name {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 17px;
+    font-weight: 800;
+}
+.file-desc {
+    display: block;
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 14px;
+}
+.primary {
+    width: 100%;
+    height: 44px;
+    margin-top: 18px;
+    border: 0;
+    border-radius: 10px;
+    color: #fff;
+    background: var(--blue);
+    cursor: pointer;
+    font-weight: 850;
+}
+.primary:disabled {
+    color: #9aa2af;
+    background: #e2e6ee;
+    cursor: not-allowed;
+}
+.result-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 0 28px;
+    border-bottom: 1px solid var(--line);
+}
+.result-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 19px;
+    font-weight: 850;
+}
+.copy {
+    height: 36px;
+    display: none;
+    align-items: center;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--blue);
+    background: #fff;
+    cursor: pointer;
+    font-weight: 800;
+}
+.result-body {
+    min-height: 0;
+    padding: 28px;
+    overflow: auto;
+    background: #f2f3f5;
+}
+pre {
+    min-height: calc(100vh - 150px);
+    margin: 0;
+    padding: 24px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #20242a;
+    font-size: 15px;
+    line-height: 1.9;
+}
+.empty,
+.error {
+    min-height: 240px;
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+    text-align: center;
+}
+.error { color: var(--danger); }
+@media (max-width: 900px) {
+    .workspace { grid-template-columns: 1fr; }
+    .left { border-right: 0; border-bottom: 1px solid var(--line); }
+}
+</style>
+</head>
+<body>
+<div class="page">
+    <header class="topbar">
+        <div class="brand"><span class="brand-mark"></span><span>文字提取</span></div>
+        <nav class="nav">
+            <a href="/">文档解析</a>
+            <a href="/compare-page">合同对比</a>
+        </nav>
+    </header>
+    <main class="workspace">
+        <section class="panel left">
+            <h1 class="panel-title">提取纯文字</h1>
+            <p class="hint">上传文档后会调用 MinerU 解析 Markdown，再去掉图片和格式标记，保留可复制的纯文本。</p>
+            <label class="dropzone">
+                <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg,.webp,.bmp,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.md,.markdown,.json">
+                <span>
+                    <span class="file-name" id="fileName">点击选择文件</span>
+                    <span class="file-desc" id="fileDesc">支持 PDF、图片、Office、文本、Markdown、JSON</span>
+                </span>
+            </label>
+            <button class="primary" type="button" id="extractBtn" disabled>开始提取</button>
+        </section>
+        <section class="panel right">
+            <div class="result-head">
+                <span class="result-title" id="resultTitle">提取结果</span>
+                <button class="copy" type="button" id="copyBtn">复制文字</button>
+            </div>
+            <div class="result-body" id="resultBody">
+                <div class="empty">等待上传文件</div>
+            </div>
+        </section>
+    </main>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const fileInput = $("fileInput");
+const extractBtn = $("extractBtn");
+const copyBtn = $("copyBtn");
+const resultBody = $("resultBody");
+let currentText = "";
+let busy = false;
+
+fileInput.addEventListener("change", () => {
+    const file = fileInput.files[0];
+    $("fileName").textContent = file ? file.name : "点击选择文件";
+    $("fileDesc").textContent = file ? `${formatBytes(file.size)} · 准备提取` : "支持 PDF、图片、Office、文本、Markdown、JSON";
+    $("resultTitle").textContent = file ? file.name : "提取结果";
+    extractBtn.disabled = !file || busy;
+});
+
+extractBtn.addEventListener("click", async () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    busy = true;
+    extractBtn.disabled = true;
+    copyBtn.style.display = "none";
+    resultBody.innerHTML = '<div class="empty">正在提取文字</div>';
+
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+        const response = await fetch("/extract-text", { method: "POST", body: formData });
+        if (!response.ok) throw new Error(`服务返回 ${response.status}`);
+        const result = await response.json();
+        if (result.error) throw new Error(result.error);
+        currentText = result.text || "";
+        resultBody.innerHTML = `<pre>${escapeHtml(currentText || "未提取到文字")}</pre>`;
+        copyBtn.style.display = currentText ? "inline-flex" : "none";
+    } catch (error) {
+        currentText = "";
+        resultBody.innerHTML = `<div class="error">${escapeHtml(error.message || "文字提取失败")}</div>`;
+    } finally {
+        busy = false;
+        extractBtn.disabled = !fileInput.files[0];
+    }
+});
+
+copyBtn.addEventListener("click", async () => {
+    if (!currentText) return;
+    await navigator.clipboard.writeText(currentText);
+    copyBtn.textContent = "已复制";
+    setTimeout(() => { copyBtn.textContent = "复制文字"; }, 1200);
+});
+
+function formatBytes(bytes) {
+    if (!bytes) return "-";
+    const units = ["B", "KB", "MB", "GB"];
+    const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+    return `${(bytes / Math.pow(1024, index)).toFixed(index ? 1 : 0)}${units[index]}`;
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+</script>
+</body>
+</html>

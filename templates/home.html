@@ -1,0 +1,2278 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MinerU 文档解析</title>
+<style>
+:root {
+    --bg: #f5f6f8;
+    --panel: #ffffff;
+    --panel-soft: #f7f8fb;
+    --ink: #15171a;
+    --muted: #6f7682;
+    --line: #e4e7ec;
+    --blue: #2f5bff;
+    --blue-soft: #eef2ff;
+    --danger: #c24141;
+    --shadow: 0 16px 38px rgba(20, 27, 43, .08);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+    color: var(--ink);
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+}
+
+button, input { font: inherit; }
+
+.app {
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 248px minmax(0, 1fr);
+}
+
+.sidebar {
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    background: #f7f8fa;
+    border-right: 1px solid var(--line);
+}
+
+.logo {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 18px;
+    font-size: 24px;
+    font-weight: 850;
+    letter-spacing: .2px;
+}
+
+.logo-mark {
+    width: 26px;
+    height: 26px;
+    border: 3px solid #111;
+    border-top-color: transparent;
+    border-radius: 0 0 18px 18px;
+    transform: rotate(-10deg);
+}
+
+.side-nav {
+    padding: 10px 10px 12px;
+    border-bottom: 1px solid var(--line);
+}
+
+.side-action {
+    width: 100%;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 14px;
+    border-radius: 12px;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 650;
+}
+
+.side-action {
+    color: var(--blue);
+    background: var(--blue-soft);
+    border: 1px solid rgba(47, 91, 255, .26);
+}
+
+.side-action:hover {
+    background: #eef1f6;
+}
+
+.nav-icon {
+    width: 18px;
+    text-align: center;
+    font-size: 20px;
+    line-height: 1;
+}
+
+.task-list {
+    min-height: 0;
+    overflow: auto;
+    padding: 14px 8px;
+}
+
+.task-item {
+    position: relative;
+    width: 100%;
+    min-height: 64px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
+.task-item:hover,
+.task-item.active {
+    background: #fff;
+    box-shadow: 0 10px 24px rgba(28, 35, 54, .06);
+}
+
+.task-delete {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    width: 24px;
+    height: 24px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    color: var(--muted);
+    background: #fff;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.task-item:hover .task-delete {
+    display: inline-flex;
+}
+
+.task-delete:hover {
+    color: var(--danger);
+    border-color: rgba(194, 65, 65, .35);
+    background: #fff5f5;
+}
+
+.pdf-dot {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: #ef4444;
+    background: #fff;
+    border: 1px solid var(--line);
+    font-size: 15px;
+}
+
+.task-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.task-meta {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.workspace {
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: 66px 1fr;
+    background: #fff;
+}
+
+.docbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    padding: 0 26px;
+    border-bottom: 1px solid var(--line);
+}
+
+.doc-title {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.doc-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 22px;
+    font-weight: 750;
+}
+
+.engine-badge {
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: #1f2937;
+    background: #fff;
+    font-size: 16px;
+}
+
+.tool-menu {
+    position: relative;
+    display: inline-flex;
+}
+
+.tool-trigger {
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--blue);
+    background: #fff;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.tool-trigger:hover,
+.tool-menu:focus-within .tool-trigger {
+    background: var(--blue-soft);
+}
+
+.tool-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    min-width: 150px;
+    display: none;
+    padding: 6px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 12px 28px rgba(20, 27, 43, .12);
+    z-index: 20;
+}
+
+.tool-menu:hover .tool-dropdown,
+.tool-menu:focus-within .tool-dropdown {
+    display: grid;
+}
+
+.tool-dropdown a {
+    height: 38px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    border-radius: 8px;
+    color: #1f2937;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 750;
+}
+
+.tool-dropdown a:hover {
+    color: var(--blue);
+    background: var(--blue-soft);
+}
+
+.stage {
+    min-height: 0;
+    background: #f2f3f5;
+}
+
+.stage.upload-mode {
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    overflow: auto;
+}
+
+.stage.result-mode {
+    display: grid;
+}
+
+.upload-card {
+    width: min(760px, 100%);
+    display: grid;
+    gap: 16px;
+    padding: 24px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: var(--shadow);
+}
+
+.format-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.format-title {
+    color: var(--muted);
+    font-size: 15px;
+}
+
+.format-controls {
+    display: inline-flex;
+    gap: 6px;
+    padding: 5px;
+    border-radius: 14px;
+    background: #f0f2f6;
+}
+
+.format-controls input { display: none; }
+
+.format-controls span {
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 18px;
+    border-radius: 11px;
+    color: #334155;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.format-controls input:checked + span {
+    color: var(--blue);
+    background: #fff;
+}
+
+.dropzone {
+    min-height: 280px;
+    display: grid;
+    place-items: center;
+    border: 1.5px dashed #b7c0d1;
+    border-radius: 18px;
+    background: #fbfcff;
+    cursor: pointer;
+}
+
+.dropzone input { display: none; }
+
+.drop-content {
+    text-align: center;
+}
+
+.drop-icon {
+    width: 56px;
+    height: 56px;
+    display: grid;
+    place-items: center;
+    margin: 0 auto 14px;
+    border-radius: 18px;
+    color: var(--blue);
+    background: var(--blue-soft);
+    font-size: 32px;
+}
+
+.drop-title {
+    display: block;
+    font-size: 22px;
+    font-weight: 800;
+}
+
+.drop-desc {
+    display: block;
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 15px;
+}
+
+.primary {
+    justify-self: center;
+    min-width: 150px;
+    height: 44px;
+    margin-top: 2px;
+    border: 0;
+    border-radius: 12px;
+    color: #fff;
+    background: var(--blue);
+    cursor: pointer;
+    font-weight: 800;
+}
+
+.primary:disabled {
+    color: #9aa2af;
+    background: #e2e6ee;
+    cursor: not-allowed;
+}
+
+.result-grid {
+    min-height: 0;
+    display: none;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.result-grid.active { display: grid; }
+
+.panel {
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: 62px 1fr;
+    background: #fff;
+}
+
+.panel + .panel {
+    border-left: 1px solid var(--line);
+}
+
+.panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 40px;
+    border-bottom: 1px solid var(--line);
+}
+
+.panel-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+}
+
+.panel-title {
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.panel-hint {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.pager {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    color: #111827;
+    font-size: 18px;
+}
+
+.result-tabs {
+    display: inline-flex;
+    gap: 6px;
+    padding: 5px;
+    border-radius: 14px;
+    background: #f0f2f6;
+}
+
+.result-tab {
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 18px;
+    border-radius: 11px;
+    color: #334155;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.result-tab.active {
+    color: var(--blue);
+    background: #fff;
+}
+
+.export-btn {
+    height: 38px;
+    display: none;
+    align-items: center;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--blue);
+    background: #fff;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.export-btn:hover {
+    background: var(--blue-soft);
+}
+
+.panel-body {
+    min-height: 0;
+    overflow: auto;
+    padding: 30px;
+    background: #f2f3f5;
+}
+
+.result-panel .panel-body {
+    background: #fff;
+}
+
+.page,
+.source-image {
+    position: relative;
+    width: min(100%, 760px);
+    margin: 0 auto 28px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .06);
+}
+
+.page.office-page {
+    width: 900px;
+    max-width: none;
+}
+
+.page img,
+.source-image img {
+    width: 100%;
+    display: block;
+}
+
+.sheet-preview {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .06);
+    font-size: 13px;
+}
+
+.sheet-preview td {
+    min-width: 90px;
+    max-width: 240px;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sheet-note {
+    margin: 0 0 12px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.word-page {
+    width: 900px;
+    max-width: none;
+    min-height: 980px;
+    margin: 0 auto 28px;
+    padding: 56px 58px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .06);
+    color: #111827;
+    font-size: 15px;
+    line-height: 1.85;
+}
+
+.word-page p {
+    margin: 0 0 12px;
+}
+
+.word-html table {
+    width: max-content;
+    min-width: 100%;
+    margin: 14px 0;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.word-html th,
+.word-html td {
+    min-width: 96px;
+    max-width: 320px;
+    padding: 7px 9px;
+    border: 1px solid var(--line);
+    vertical-align: top;
+    white-space: pre-wrap;
+}
+
+.word-html img {
+    max-width: 100%;
+    height: auto;
+}
+
+.word-table {
+    width: max-content;
+    min-width: 100%;
+    margin: 14px 0;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.word-table td {
+    min-width: 96px;
+    max-width: 320px;
+    padding: 7px 9px;
+    border: 1px solid var(--line);
+    vertical-align: top;
+    white-space: pre-wrap;
+}
+
+.slide-page {
+    width: 900px;
+    max-width: none;
+    min-height: 506px;
+    margin: 0 auto 28px;
+    padding: 46px 58px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .06);
+    color: #111827;
+    font-size: 22px;
+    line-height: 1.55;
+}
+
+.slide-page h3 {
+    margin: 0 0 24px;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.slide-page p {
+    margin: 0 0 14px;
+}
+
+.onlyoffice-host {
+    width: 100%;
+    height: calc(100vh - 170px);
+    min-height: 620px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .06);
+}
+
+.page-foot {
+    padding: 14px 10px;
+    color: #a0a6b2;
+    text-align: center;
+    font-size: 16px;
+}
+
+.bbox-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.bbox {
+    position: absolute;
+    pointer-events: auto;
+    border: 1.5px solid rgba(47, 91, 255, .9);
+    background: rgba(47, 91, 255, .08);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: border-color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+
+.bbox::before {
+    content: attr(data-label);
+    position: absolute;
+    left: -1px;
+    top: -20px;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px 5px 0 0;
+    color: #fff;
+    background: rgba(47, 91, 255, .95);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.bbox.title {
+    border-color: rgba(214, 166, 66, .95);
+    background: rgba(214, 166, 66, .14);
+}
+
+.bbox.title::before {
+    background: rgba(214, 166, 66, .95);
+}
+
+.bbox.active {
+    border-color: #0f3cff;
+    background: rgba(47, 91, 255, .16);
+    box-shadow: 0 0 0 3px rgba(47, 91, 255, .16);
+}
+
+.md-block {
+    margin: 0 0 14px;
+    padding: 14px 16px;
+    border: 1px solid rgba(47, 91, 255, .26);
+    border-radius: 12px;
+    background: #fbfdff;
+    transition: border-color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+
+.md-block.title {
+    border-color: rgba(214, 166, 66, .55);
+    background: #fffaf0;
+}
+
+.md-block.active {
+    border-color: rgba(47, 91, 255, .82);
+    background: #f5f8ff;
+    box-shadow: 0 0 0 3px rgba(47, 91, 255, .10);
+}
+
+.md-block-meta {
+    margin-bottom: 8px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.markdown-body .md-mark {
+    position: relative;
+    border-radius: 4px;
+    background: transparent;
+    transition: background .16s ease, box-shadow .16s ease;
+}
+
+.markdown-body .md-mark::before {
+    content: attr(data-label);
+    position: absolute;
+    right: -8px;
+    top: -16px;
+    min-width: 20px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    color: #fff;
+    background: rgba(47, 91, 255, .92);
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.markdown-body .md-mark.active {
+    background: rgba(47, 91, 255, .10);
+    box-shadow: 0 0 0 3px rgba(47, 91, 255, .16);
+}
+
+.markdown-body .md-mark.active::before {
+    opacity: 1;
+}
+
+pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #30342f;
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.markdown-body {
+    max-width: 920px;
+    margin: 0 auto;
+    color: #1f2933;
+    font-size: 16px;
+    line-height: 1.88;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3 {
+    margin: 30px 0 14px;
+    line-height: 1.35;
+}
+
+.markdown-body h1 { font-size: 28px; }
+.markdown-body h2 { font-size: 24px; }
+.markdown-body h3 { font-size: 19px; }
+
+.markdown-body p {
+    margin: 0 0 18px;
+}
+
+.markdown-body img {
+    width: auto;
+    max-width: min(100%, 860px);
+    height: auto;
+    display: block;
+    margin: 20px auto;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+    margin: 0 0 18px 24px;
+    padding: 0;
+}
+
+.markdown-body code {
+    padding: 2px 5px;
+    border-radius: 5px;
+    background: #eef0eb;
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: 13px;
+}
+
+.markdown-body pre {
+    margin: 0 0 18px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #f7f8f4;
+    overflow: auto;
+}
+
+.markdown-body table {
+    width: max-content;
+    min-width: 100%;
+    max-width: none;
+    margin: 0 0 22px;
+    border-collapse: collapse;
+    font-size: 14px;
+    table-layout: auto;
+}
+
+.markdown-body th,
+.markdown-body td {
+    min-width: 110px;
+    max-width: 360px;
+    border: 1px solid #cbd5e1;
+    padding: 10px;
+    vertical-align: top;
+    word-break: break-word;
+}
+
+.markdown-body th {
+    background: #f1f5f9;
+    font-weight: 800;
+}
+
+.empty,
+.loading,
+.error {
+    min-height: 220px;
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+    text-align: center;
+    font-size: 15px;
+}
+
+.error { color: var(--danger); }
+
+.spinner {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 3px solid #d9dee8;
+    border-top-color: var(--blue);
+    animation: spin .8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 1100px) {
+    body { overflow: auto; }
+    .app {
+        height: auto;
+        min-height: 100vh;
+        grid-template-columns: 1fr;
+    }
+    .sidebar {
+        min-height: 360px;
+    }
+    .result-grid.active {
+        grid-template-columns: 1fr;
+    }
+    .panel + .panel {
+        border-left: 0;
+        border-top: 1px solid var(--line);
+    }
+}
+</style>
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="logo">
+            <span class="logo-mark"></span>
+            <span>MinerU</span>
+        </div>
+        <nav class="side-nav">
+            <button class="side-action" type="button" id="btnChoose"><span class="nav-icon">+</span><span>新解析</span></button>
+        </nav>
+        <div class="task-list" id="fileList">
+            <div class="empty">还没有上传文件</div>
+        </div>
+    </aside>
+
+    <main class="workspace">
+        <header class="docbar">
+            <div class="doc-title">
+                <span class="doc-name" id="docName">新解析</span>
+                <span class="engine-badge">MinerU VLM</span>
+            </div>
+            <div class="tool-menu">
+                <button class="tool-trigger" type="button">工具 ▾</button>
+                <div class="tool-dropdown">
+                    <a href="/compare-page">合同对比</a>
+                    <a href="/text-extract-page">文字提取</a>
+                    <a href="/no-image-md-page">无图MD</a>
+                </div>
+            </div>
+        </header>
+
+        <section class="stage upload-mode" id="stage">
+            <section class="upload-card" id="uploadArea">
+                <div class="format-row">
+                    <span class="format-title">选择解析结果格式</span>
+                    <div class="format-controls">
+                        <label><input type="radio" name="format" value="markdown" checked><span>Markdown</span></label>
+                        <label><input type="radio" name="format" value="json"><span>JSON</span></label>
+                    </div>
+                </div>
+                <label class="dropzone">
+                    <input type="file" id="parseFile" accept=".pdf,.png,.jpg,.jpeg,.webp,.bmp,.doc,.docx,.rtf,.ppt,.pptx,.xls,.xlsx,.csv,.html,.htm,.txt">
+                    <span class="drop-content">
+                        <span class="drop-icon">↑</span>
+                        <span class="drop-title" id="fileTitle">点击上传文件</span>
+                        <span class="drop-desc" id="fileDesc">支持 PDF、图片、Word、PPT、Excel、CSV、HTML、TXT</span>
+                    </span>
+                </label>
+                <button class="primary" type="button" id="btnParse" disabled>开始解析</button>
+            </section>
+
+            <section class="result-grid" id="resultGrid">
+                <article class="panel source-panel">
+                    <div class="panel-head">
+                        <div class="panel-title-wrap">
+                            <span class="panel-title">原文件</span>
+                            <span class="pager" id="sourceHint">等待上传</span>
+                        </div>
+                    </div>
+                    <div class="panel-body" id="sourcePanel"></div>
+                </article>
+                <article class="panel result-panel">
+                    <div class="panel-head">
+                        <div class="result-tabs">
+                            <span class="result-tab active" id="markdownTab">Markdown</span>
+                            <span class="result-tab" id="markdownPreviewTab">Markdown预览</span>
+                            <span class="result-tab" id="jsonTab">JSON</span>
+                        </div>
+                        <button class="export-btn" type="button" id="exportMarkdown">导出 Markdown</button>
+                    </div>
+                    <div class="panel-body" id="resultPanel"></div>
+                </article>
+            </section>
+        </section>
+    </main>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const parseFile = $("parseFile");
+const btnParse = $("btnParse");
+const btnChoose = $("btnChoose");
+const exportMarkdown = $("exportMarkdown");
+const sourcePanel = $("sourcePanel");
+const resultPanel = $("resultPanel");
+const stage = $("stage");
+const uploadArea = $("uploadArea");
+const resultGrid = $("resultGrid");
+const fileList = $("fileList");
+let markedReady = false;
+let busy = false;
+let uploadedFiles = [];
+let currentBlocks = [];
+let lastResult = null;
+let activeFileKey = "";
+
+btnChoose.addEventListener("click", () => {
+    showUploadMode();
+    parseFile.click();
+});
+
+parseFile.addEventListener("change", () => {
+    const file = parseFile.files[0];
+    $("fileTitle").textContent = file ? file.name : "点击上传文件";
+    $("fileDesc").textContent = file ? `${formatBytes(file.size)} · 准备解析` : "支持 PDF、图片、Word、PPT、Excel、CSV、HTML、TXT";
+    $("sourceHint").textContent = file ? "1 / -" : "等待上传";
+    $("docName").textContent = file ? file.name : "新解析";
+    btnParse.disabled = !file || busy;
+    if (file) activeFileKey = addUploadedFile(file);
+});
+
+fileList.addEventListener("click", (event) => {
+    const deleteBtn = event.target.closest("[data-delete-key]");
+    if (deleteBtn) {
+        event.stopPropagation();
+        deleteHistoryItem(deleteBtn.dataset.deleteKey);
+        return;
+    }
+    const item = event.target.closest("[data-file-key]");
+    if (item) restoreUploadedFile(item.dataset.fileKey);
+});
+
+document.querySelectorAll('input[name="format"]').forEach((input) => {
+    input.addEventListener("change", () => {
+        updateResultTabs(getFormat());
+    });
+});
+
+$("markdownTab").addEventListener("click", () => {
+    if (!lastResult) return;
+    renderResult(lastResult.content || "", "markdown");
+    updateResultTabs("markdown");
+});
+
+$("markdownPreviewTab").addEventListener("click", () => {
+    if (!lastResult) return;
+    renderMarkdownPreview();
+    updateResultTabs("preview");
+});
+
+$("jsonTab").addEventListener("click", () => {
+    if (!lastResult) return;
+    renderResult(lastResult.json_content || "", "json");
+    updateResultTabs("json");
+});
+
+exportMarkdown.addEventListener("click", () => {
+    if (!lastResult) return;
+    const markdown = resolveImageRefs(lastResult.markdown_content || "");
+    if (!markdown) return;
+    const filename = markdownFilename(lastResult.filename || "mineru_result");
+    downloadTextFile(filename, markdown, "text/markdown;charset=utf-8");
+});
+
+window.addEventListener("resize", () => {
+    document.querySelectorAll(".page img").forEach(drawPageBoxes);
+});
+
+sourcePanel.addEventListener("mouseover", (event) => {
+    const block = event.target.closest("[data-block]");
+    if (block) highlightBlock(block.dataset.block);
+});
+
+sourcePanel.addEventListener("mouseout", (event) => {
+    const block = event.target.closest("[data-block]");
+    if (block && !block.contains(event.relatedTarget)) clearBlockHighlight();
+});
+
+sourcePanel.addEventListener("click", (event) => {
+    const block = event.target.closest("[data-block]");
+    if (block) highlightBlock(block.dataset.block, "result");
+});
+
+resultPanel.addEventListener("mouseover", (event) => {
+    const block = event.target.closest("[data-block]");
+    if (block) highlightBlock(block.dataset.block);
+});
+
+resultPanel.addEventListener("mouseout", (event) => {
+    const block = event.target.closest("[data-block]");
+    if (block && !block.contains(event.relatedTarget)) clearBlockHighlight();
+});
+
+resultPanel.addEventListener("click", (event) => {
+    const block = event.target.closest("[data-block]");
+    if (block) highlightBlock(block.dataset.block, "source");
+});
+
+loadParseHistory();
+
+btnParse.addEventListener("click", async () => {
+    const file = parseFile.files[0];
+    if (!file) {
+        parseFile.click();
+        return;
+    }
+
+    busy = true;
+    btnParse.disabled = true;
+    showResultMode();
+    sourcePanel.innerHTML = loadingView("任务已提交，后台解析中");
+    resultPanel.innerHTML = loadingView("正在提交解析任务");
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("format", getFormat());
+
+    try {
+        const response = await fetch("/parse-jobs", { method: "POST", body: formData });
+        if (!response.ok) throw new Error(`服务返回 ${response.status}`);
+        const job = await response.json();
+        if (job.error) throw new Error(job.error);
+
+        resultPanel.innerHTML = loadingView("后台解析中，可以关闭页面，完成后会进入历史记录");
+        sourcePanel.innerHTML = loadingView("等待解析完成");
+        await pollParseJob(job.job_id, file);
+    } catch (error) {
+        sourcePanel.innerHTML = errorView("源文件预览失败");
+        resultPanel.innerHTML = errorView(error.message || "解析失败");
+    } finally {
+        busy = false;
+        btnParse.disabled = !parseFile.files[0];
+    }
+});
+
+async function pollParseJob(jobId, file) {
+    while (true) {
+        await delay(1200);
+        const response = await fetch(`/parse-jobs/${encodeURIComponent(jobId)}`);
+        if (!response.ok) throw new Error(`服务返回 ${response.status}`);
+        const job = await response.json();
+        if (job.error) throw new Error(job.error);
+
+        const message = `${job.message || "后台解析中"}${Number.isFinite(job.progress) ? ` · ${job.progress}%` : ""}`;
+        sourcePanel.innerHTML = loadingView(message);
+        resultPanel.innerHTML = loadingView("可以关闭页面，解析完成后会自动进入历史记录");
+
+        if (job.status === "failed") {
+            throw new Error(job.error || "解析失败");
+        }
+        if (job.status === "done") {
+            const result = job.result;
+            if (!result) throw new Error("解析完成但没有返回结果");
+            lastResult = result;
+            currentBlocks = Array.isArray(result.blocks) ? result.blocks : [];
+            saveParsedResult(file, result);
+            renderSource(result.source, result.filename, currentBlocks);
+            renderResult(result.content || "", result.format);
+            $("docName").textContent = result.filename || file.name;
+            exportMarkdown.style.display = result.markdown_content ? "inline-flex" : "none";
+            updateResultTabs(result.format);
+            await loadParseHistory();
+            return;
+        }
+    }
+}
+
+function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getFormat() {
+    return document.querySelector('input[name="format"]:checked')?.value || "markdown";
+}
+
+function showResultMode() {
+    stage.classList.remove("upload-mode");
+    stage.classList.add("result-mode");
+    uploadArea.style.display = "none";
+    resultGrid.classList.add("active");
+}
+
+function showUploadMode() {
+    stage.classList.remove("result-mode");
+    stage.classList.add("upload-mode");
+    uploadArea.style.display = "grid";
+    resultGrid.classList.remove("active");
+    exportMarkdown.style.display = "none";
+}
+
+function updateResultTabs(format) {
+    $("markdownTab").classList.toggle("active", format !== "json" && format !== "preview");
+    $("markdownPreviewTab").classList.toggle("active", format === "preview");
+    $("jsonTab").classList.toggle("active", format === "json");
+}
+
+function addUploadedFile(file) {
+    const existing = uploadedFiles.find((item) => item.name === file.name && item.size === file.size && item.lastModified === file.lastModified);
+    if (!existing) {
+        const item = {
+            key: `file-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+            name: file.name,
+            size: file.size,
+            lastModified: file.lastModified,
+            format: getFormat(),
+            status: "pending",
+            result: null,
+        };
+        uploadedFiles.unshift(item);
+        renderFileList(item.key);
+        return item.key;
+    }
+    renderFileList(existing.key);
+    return existing.key;
+}
+
+function saveParsedResult(file, result) {
+    const item = uploadedFiles.find((entry) => entry.key === activeFileKey)
+        || uploadedFiles.find((entry) => entry.name === file.name && entry.size === file.size && entry.lastModified === file.lastModified);
+    if (!item) return;
+    item.status = "parsed";
+    item.format = result.format || getFormat();
+    item.result = result;
+    item.parsedAt = Date.now();
+    item.taskId = result.task_id || item.taskId || "";
+    item.history = Boolean(item.taskId);
+    activeFileKey = item.key;
+    renderFileList(item.key);
+}
+
+async function restoreUploadedFile(key) {
+    const item = uploadedFiles.find((entry) => entry.key === key);
+    if (!item) return;
+
+    activeFileKey = item.key;
+    renderFileList(item.key);
+    $("docName").textContent = item.name;
+
+    if (item.history && !item.result) {
+        await loadHistoryResult(item);
+        return;
+    }
+
+    if (!item.result) {
+        showResultMode();
+        sourcePanel.innerHTML = '<div class="empty">文件已选择，尚未解析</div>';
+        resultPanel.innerHTML = '<div class="empty">点击左侧“新解析”选择文件，或重新点击开始解析</div>';
+        exportMarkdown.style.display = "none";
+        return;
+    }
+
+    lastResult = item.result;
+    currentBlocks = Array.isArray(item.result.blocks) ? item.result.blocks : [];
+    showResultMode();
+    renderSource(item.result.source, item.result.filename || item.name, currentBlocks);
+    renderResult(item.result.content || "", item.result.format);
+    exportMarkdown.style.display = item.result.markdown_content ? "inline-flex" : "none";
+    updateResultTabs(item.result.format);
+}
+
+async function loadParseHistory() {
+    try {
+        const response = await fetch("/parse-history");
+        if (!response.ok) return;
+        const data = await response.json();
+        const tasks = Array.isArray(data.tasks) ? data.tasks : [];
+        tasks.reverse().forEach((task) => {
+            if (!task.task_id || uploadedFiles.some((item) => item.taskId === task.task_id)) return;
+            uploadedFiles.unshift({
+                key: task.key || `history-${task.task_id}`,
+                taskId: task.task_id,
+                name: task.name || task.filename || "历史解析",
+                size: task.size || 0,
+                lastModified: 0,
+                format: task.format || "markdown",
+                status: task.status || "done",
+                progress: task.progress || 0,
+                message: task.message || "",
+                error: task.error || "",
+                result: null,
+                parsedAt: task.created_at || "",
+                history: true,
+            });
+        });
+        renderFileList(activeFileKey);
+    } catch (error) {
+        console.warn("加载历史解析失败", error);
+    }
+}
+
+async function loadHistoryResult(item) {
+    showResultMode();
+    sourcePanel.innerHTML = loadingView("正在加载历史源文件预览");
+    resultPanel.innerHTML = loadingView("正在加载历史解析结果");
+    exportMarkdown.style.display = "none";
+
+    try {
+        const response = await fetch(`/parse-history/${encodeURIComponent(item.taskId)}`);
+        if (!response.ok) throw new Error(`服务返回 ${response.status}`);
+        const result = await response.json();
+        if (result.error) throw new Error(result.error);
+        if (result.status && result.status !== "done") {
+            item.status = result.status;
+            item.progress = result.progress || 0;
+            item.message = result.message || "";
+            item.error = result.error || "";
+            renderFileList(item.key);
+            sourcePanel.innerHTML = '<div class="empty">任务尚未完成</div>';
+            resultPanel.innerHTML = loadingView(`${item.message || statusLabel(item.status)}${item.progress ? ` · ${item.progress}%` : ""}`);
+            return;
+        }
+        item.result = result;
+        item.status = "done";
+        lastResult = result;
+        currentBlocks = Array.isArray(result.blocks) ? result.blocks : [];
+        renderSource(result.source, result.filename || item.name, currentBlocks);
+        renderResult(result.content || "", result.format || "markdown");
+        $("docName").textContent = result.filename || item.name;
+        exportMarkdown.style.display = result.markdown_content ? "inline-flex" : "none";
+        updateResultTabs(result.format || "markdown");
+    } catch (error) {
+        sourcePanel.innerHTML = errorView("历史源文件预览失败");
+        resultPanel.innerHTML = errorView(error.message || "历史解析加载失败");
+    }
+}
+
+async function deleteHistoryItem(key) {
+    const item = uploadedFiles.find((entry) => entry.key === key);
+    if (!item || !item.taskId) return;
+    if (!confirm(`确定删除“${item.name}”的历史解析吗？MinIO 中对应文件也会删除。`)) return;
+
+    try {
+        const response = await fetch(`/parse-history/${encodeURIComponent(item.taskId)}`, { method: "DELETE" });
+        if (!response.ok) throw new Error(`服务返回 ${response.status}`);
+        const result = await response.json();
+        if (result.error) throw new Error(result.error);
+
+        uploadedFiles = uploadedFiles.filter((entry) => entry.key !== key);
+        if (activeFileKey === key) {
+            activeFileKey = "";
+            lastResult = null;
+            currentBlocks = [];
+            $("docName").textContent = "新解析";
+            showUploadMode();
+        }
+        renderFileList(activeFileKey);
+    } catch (error) {
+        alert(error.message || "删除失败");
+    }
+}
+
+function markdownFilename(name) {
+    const base = String(name || "mineru_result")
+        .replace(/[\\/:*?"<>|]+/g, "_")
+        .replace(/\.[^.]+$/, "");
+    return `${base || "mineru_result"}.md`;
+}
+
+function downloadTextFile(filename, content, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+}
+
+function renderFileList(activeKey) {
+    if (!uploadedFiles.length) {
+        fileList.innerHTML = '<div class="empty">还没有上传文件</div>';
+        return;
+    }
+    fileList.innerHTML = uploadedFiles.map((file) => `
+        <button class="task-item ${file.key === activeKey ? "active" : ""}" type="button" data-file-key="${escapeHtml(file.key)}">
+            <div class="pdf-dot">⌁</div>
+            <div>
+                <div class="task-name">${escapeHtml(file.name)}</div>
+                <div class="task-meta">${escapeHtml(taskMeta(file))}</div>
+            </div>
+            ${file.taskId ? `<span class="task-delete" data-delete-key="${escapeHtml(file.key)}" title="删除历史">×</span>` : ""}
+        </button>
+    `).join("");
+}
+
+function taskMeta(file) {
+    const status = statusLabel(file.status);
+    if (file.history) {
+        return `${formatHistoryTime(file.parsedAt)} · ${status}`;
+    }
+    return `${formatBytes(file.size)} · ${status}`;
+}
+
+function statusLabel(status) {
+    if (status === "done" || status === "parsed") return "已解析";
+    if (status === "queued") return "排队中";
+    if (status === "running") return "解析中";
+    if (status === "failed") return "解析失败";
+    return "待解析";
+}
+
+function formatHistoryTime(value) {
+    if (!value) return "历史记录";
+    return String(value).replace("T", " ").slice(0, 16);
+}
+
+function renderSource(source, filename, blocks = []) {
+    if (!source) {
+        sourcePanel.innerHTML = '<div class="empty">没有源文件预览</div>';
+        return;
+    }
+    if (source.type === "pdf") {
+        $("sourceHint").textContent = `1 / ${source.page_count}`;
+        sourcePanel.innerHTML = source.images.map((img, index) => `
+            <div class="page" data-page="${index}">
+                <img src="data:image/png;base64,${img}" alt="源文件第 ${index + 1} 页" onload="drawPageBoxes(this)">
+                <div class="bbox-layer">${renderPageBoxes(index, blocks)}</div>
+                <div class="page-foot">第 ${index + 1} 页</div>
+            </div>
+        `).join("");
+        return;
+    }
+    if (source.type === "image") {
+        $("sourceHint").textContent = filename || "图片";
+        sourcePanel.innerHTML = `<div class="source-image"><img src="data:image/png;base64,${source.data}" alt="${escapeHtml(filename || "源文件")}"></div>`;
+        return;
+    }
+    $("sourceHint").textContent = filename || "文本";
+    sourcePanel.innerHTML = `<pre>${escapeHtml(source.content || filename || "")}</pre>`;
+}
+
+function renderSource(source, filename, blocks = []) {
+    if (!source) {
+        sourcePanel.innerHTML = '<div class="empty">没有源文件预览</div>';
+        return;
+    }
+    if (source.type === "pdf") {
+        $("sourceHint").textContent = `1 / ${source.page_count}`;
+        sourcePanel.innerHTML = source.images.map((img, index) => `
+            <div class="page" data-page="${index}">
+                <img src="data:image/png;base64,${img}" alt="源文件第 ${index + 1} 页" onload="drawPageBoxes(this)">
+                <div class="bbox-layer">${renderPageBoxes(index, blocks)}</div>
+                <div class="page-foot">第 ${index + 1} 页</div>
+            </div>
+        `).join("");
+        requestAnimationFrame(() => {
+            sourcePanel.querySelectorAll(".page img").forEach(drawPageBoxes);
+        });
+        return;
+    }
+    if (source.type === "image") {
+        $("sourceHint").textContent = filename || "图片";
+        sourcePanel.innerHTML = `<div class="source-image"><img src="data:image/png;base64,${source.data}" alt="${escapeHtml(filename || "source file")}"></div>`;
+        return;
+    }
+    $("sourceHint").textContent = filename || "文本";
+    sourcePanel.innerHTML = `<pre>${escapeHtml(source.content || filename || "")}</pre>`;
+}
+
+function renderSource(source, filename, blocks = []) {
+    if (!source) {
+        sourcePanel.innerHTML = '<div class="empty">No source preview</div>';
+        return;
+    }
+    if (source.type === "pdf") {
+        $("sourceHint").textContent = `1 / ${source.page_count}`;
+        const pageClass = source.converted_from === "docx" ? "page docx-page" : "page";
+        sourcePanel.innerHTML = source.images.map((img, index) => `
+            <div class="${pageClass}" data-page="${index}">
+                <img src="data:image/png;base64,${img}" alt="source page ${index + 1}" onload="drawPageBoxes(this)">
+                <div class="bbox-layer">${renderPageBoxes(index, blocks)}</div>
+                <div class="page-foot">Page ${index + 1}</div>
+            </div>
+        `).join("");
+        requestAnimationFrame(() => {
+            sourcePanel.querySelectorAll(".page img").forEach(drawPageBoxes);
+        });
+        return;
+    }
+    if (source.type === "image") {
+        $("sourceHint").textContent = filename || "image";
+        sourcePanel.innerHTML = `<div class="source-image"><img src="data:image/png;base64,${source.data}" alt="${escapeHtml(filename || "source file")}"></div>`;
+        return;
+    }
+    if (source.type === "spreadsheet") {
+        $("sourceHint").textContent = `${source.row_count || 0} rows`;
+        sourcePanel.innerHTML = renderSpreadsheetSource(source);
+        return;
+    }
+    if (source.type === "word") {
+        $("sourceHint").textContent = `${source.page_count || 1} pages`;
+        sourcePanel.innerHTML = renderWordSource(source);
+        return;
+    }
+    $("sourceHint").textContent = filename || "text";
+    sourcePanel.innerHTML = `<pre>${escapeHtml(source.content || filename || "")}</pre>`;
+}
+
+function renderSpreadsheetSource(source) {
+    const rows = Array.isArray(source.rows) ? source.rows : [];
+    if (!rows.length) {
+        return `<div class="empty">${escapeHtml(source.content || "Spreadsheet preview is empty")}</div>`;
+    }
+    const note = "表格源文件完整预览";
+    const table = rows.map((row) => {
+        const cells = row.map((cell) => `<td title="${escapeHtml(cell)}">${escapeHtml(cell)}</td>`).join("");
+        return `<tr>${cells}</tr>`;
+    }).join("");
+    return `<div class="sheet-note">${note}</div><table class="sheet-preview"><tbody>${table}</tbody></table>`;
+}
+
+function renderResult(content, format, blocks = []) {
+    if (format === "json") {
+        resultPanel.innerHTML = `<pre>${escapeHtml(content)}</pre>`;
+        return;
+    }
+    resultPanel.innerHTML = `<div class="markdown-body">${markdownToHtml(content)}</div>`;
+    if (blocks.length) {
+        requestAnimationFrame(() => markMarkdownBlocks(blocks));
+    }
+}
+
+function renderPageBoxes(page, blocks) {
+    return blocks
+        .map((block, index) => ({ block, index }))
+        .filter(({ block }) => block.page === page && Array.isArray(block.bbox) && block.bbox.length === 4)
+        .map(({ block, index }) => {
+            const cls = block.type === "title" ? " title" : "";
+            return `<span class="bbox${cls}" data-block="${index}" data-label="${index + 1}" data-bbox="${block.bbox.join(",")}"></span>`;
+        })
+        .join("");
+}
+
+function drawPageBoxes(img) {
+    const page = img.closest(".page");
+    if (!page || !img.naturalWidth || !img.naturalHeight) return;
+    const scaleX = img.clientWidth / img.naturalWidth;
+    const scaleY = img.clientHeight / img.naturalHeight;
+    const renderScale = 1.2;
+    page.querySelectorAll(".bbox").forEach((box) => {
+        const [x1, y1, x2, y2] = box.dataset.bbox.split(",").map(Number);
+        box.style.left = `${x1 * renderScale * scaleX}px`;
+        box.style.top = `${y1 * renderScale * scaleY}px`;
+        box.style.width = `${(x2 - x1) * renderScale * scaleX}px`;
+        box.style.height = `${(y2 - y1) * renderScale * scaleY}px`;
+    });
+}
+
+function renderMarkdownBlock(block, index) {
+    const type = block.type || "text";
+    const cls = type === "title" ? " title" : "";
+    return `
+        <section class="md-block${cls}" data-block="${index}">
+            <div class="md-block-meta">#${index + 1} · 第 ${(block.page || 0) + 1} 页 · ${escapeHtml(type)}</div>
+            ${markdownToHtml(block.text || "")}
+        </section>
+    `;
+}
+
+function highlightBlock(blockId, scrollTarget) {
+    if (blockId === undefined || blockId === null) return;
+    if (!resultPanel.querySelector(".markdown-body") && lastResult?.markdown_content) {
+        renderResult(lastResult.markdown_content, "markdown");
+        updateResultTabs("markdown");
+    }
+    clearBlockHighlight();
+    const sourceBox = sourcePanel.querySelector(`.bbox[data-block="${blockId}"]`);
+    let mdBlock = resultPanel.querySelector(`.md-mark[data-block="${blockId}"]`);
+    if (!mdBlock && currentBlocks.length) {
+        markMarkdownBlocks(currentBlocks);
+        mdBlock = resultPanel.querySelector(`.md-mark[data-block="${blockId}"]`);
+    }
+    sourceBox?.classList.add("active");
+    mdBlock?.classList.add("active");
+    if (scrollTarget === "source" && sourceBox) {
+        sourceBox.closest(".page")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    if (scrollTarget === "result" && mdBlock) {
+        mdBlock.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+}
+
+function clearBlockHighlight() {
+    sourcePanel.querySelectorAll(".bbox.active").forEach((item) => item.classList.remove("active"));
+    resultPanel.querySelectorAll(".md-mark.active").forEach((item) => item.classList.remove("active"));
+}
+
+function markMarkdownBlocks(blocks) {
+    const root = resultPanel.querySelector(".markdown-body");
+    if (!root) return;
+    root.querySelectorAll(".md-mark").forEach(unwrapElement);
+    root.normalize();
+
+    const textNodes = collectTextNodes(root);
+    const stream = buildTextStream(textNodes);
+    let cursor = 0;
+    const matches = [];
+
+    blocks.forEach((block, index) => {
+        const needle = normalizedChars(block.text || "");
+        if (needle.length < 4) return;
+
+        const match = findTextStreamMatch(stream.normalized, needle, cursor);
+        if (!match) return;
+
+        const start = stream.map[match.start];
+        const end = stream.map[match.end - 1];
+        if (!start || !end) return;
+
+        matches.push({ index, start, end });
+        cursor = match.end;
+    });
+
+    matches.reverse().forEach(({ index, start, end }) => {
+        const mark = wrapTextRange(start.node, start.offset, end.node, end.offset + 1);
+        if (!mark) return;
+        mark.className = "md-mark";
+        mark.dataset.block = String(index);
+        mark.dataset.label = String(index + 1);
+    });
+}
+
+function unwrapElement(element) {
+    const parent = element.parentNode;
+    if (!parent) return;
+    while (element.firstChild) {
+        parent.insertBefore(element.firstChild, element);
+    }
+    parent.removeChild(element);
+}
+
+function collectTextNodes(root) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+            if (!node.textContent || !node.textContent.trim()) return NodeFilter.FILTER_REJECT;
+            if (node.parentElement?.closest("script,style")) return NodeFilter.FILTER_REJECT;
+            return NodeFilter.FILTER_ACCEPT;
+        },
+    });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    return nodes;
+}
+
+function buildTextStream(textNodes) {
+    const chars = [];
+    const map = [];
+    textNodes.forEach((node) => {
+        const text = node.textContent || "";
+        for (let offset = 0; offset < text.length; offset++) {
+            const normalized = normalizeChar(text[offset]);
+            if (!normalized) continue;
+            chars.push(normalized);
+            map.push({ node, offset });
+        }
+    });
+    return { normalized: chars.join(""), map };
+}
+
+function findTextStreamMatch(haystack, needle, cursor) {
+    const variants = [
+        needle,
+        needle.slice(0, Math.min(80, needle.length)),
+        needle.slice(0, Math.min(48, needle.length)),
+        needle.slice(0, Math.min(24, needle.length)),
+    ].filter((item, index, arr) => item.length >= 4 && arr.indexOf(item) === index);
+
+    for (const variant of variants) {
+        let start = haystack.indexOf(variant, cursor);
+        if (start < 0 && cursor > 0) start = haystack.indexOf(variant);
+        if (start >= 0) return { start, end: start + variant.length };
+    }
+    return null;
+}
+
+function wrapTextRange(startNode, startOffset, endNode, endOffset) {
+    const range = document.createRange();
+    try {
+        range.setStart(startNode, startOffset);
+        range.setEnd(endNode, endOffset);
+        const mark = document.createElement("span");
+        mark.appendChild(range.extractContents());
+        range.insertNode(mark);
+        return mark;
+    } catch (error) {
+        return null;
+    } finally {
+        range.detach();
+    }
+}
+
+function normalizedChars(text) {
+    return Array.from(String(text || "")).map(normalizeChar).filter(Boolean).join("");
+}
+
+function normalizeChar(char) {
+    return /[\p{L}\p{N}]/u.test(char) ? char.toLowerCase() : "";
+}
+
+
+function normalizeText(text) {
+    return String(text || "")
+        .replace(/\s+/g, "")
+        .replace(/[^\p{L}\p{N}]+/gu, "")
+        .toLowerCase();
+}
+
+function markdownToHtml(markdown) {
+    const lines = markdown.split(/\r?\n/);
+    const html = [];
+    let inCode = false;
+    let listType = null;
+    let paragraph = [];
+
+    const flushParagraph = () => {
+        if (!paragraph.length) return;
+        html.push(`<p>${inlineMarkdown(paragraph.join(" "))}</p>`);
+        paragraph = [];
+    };
+
+    const closeList = () => {
+        if (!listType) return;
+        html.push(`</${listType}>`);
+        listType = null;
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+        const raw = lines[i];
+        const line = raw.trim();
+
+        if (line.startsWith("```")) {
+            flushParagraph();
+            closeList();
+            if (inCode) {
+                html.push("</code></pre>");
+                inCode = false;
+            } else {
+                html.push("<pre><code>");
+                inCode = true;
+            }
+            continue;
+        }
+
+        if (inCode) {
+            html.push(escapeHtml(raw) + "\n");
+            continue;
+        }
+
+        if (!line) {
+            flushParagraph();
+            closeList();
+            continue;
+        }
+
+        if (isTableStart(lines, i)) {
+            flushParagraph();
+            closeList();
+            const headers = splitTableRow(lines[i]);
+            i += 1;
+            const rows = [];
+            while (i + 1 < lines.length && lines[i + 1].trim().startsWith("|")) {
+                rows.push(splitTableRow(lines[i + 1]));
+                i += 1;
+            }
+            html.push(renderTable(headers, rows));
+            continue;
+        }
+
+        const heading = line.match(/^(#{1,3})\s+(.+)$/);
+        if (heading) {
+            flushParagraph();
+            closeList();
+            const level = heading[1].length;
+            html.push(`<h${level}>${inlineMarkdown(heading[2])}</h${level}>`);
+            continue;
+        }
+
+        const unordered = line.match(/^[-*]\s+(.+)$/);
+        if (unordered) {
+            flushParagraph();
+            if (listType !== "ul") {
+                closeList();
+                listType = "ul";
+                html.push("<ul>");
+            }
+            html.push(`<li>${inlineMarkdown(unordered[1])}</li>`);
+            continue;
+        }
+
+        const ordered = line.match(/^\d+\.\s+(.+)$/);
+        if (ordered) {
+            flushParagraph();
+            if (listType !== "ol") {
+                closeList();
+                listType = "ol";
+                html.push("<ol>");
+            }
+            html.push(`<li>${inlineMarkdown(ordered[1])}</li>`);
+            continue;
+        }
+
+        const imageMd = line.match(/^!\[.*?\]\((.+?)\)$/);
+        if (imageMd) {
+            flushParagraph();
+            closeList();
+            html.push(`<p><img src="${escapeHtml(imageMd[1])}" alt=""></p>`);
+            continue;
+        }
+
+        paragraph.push(line);
+    }
+
+    flushParagraph();
+    closeList();
+    if (inCode) html.push("</code></pre>");
+    return html.join("\n") || '<div class="empty">Markdown 内容为空</div>';
+}
+
+function inlineMarkdown(text) {
+    if (/<[a-zA-Z][\s\S]*?>/.test(text)) {
+        return text;
+    }
+    return escapeHtml(text)
+        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+        .replace(/`(.+?)`/g, "<code>$1</code>");
+}
+
+function isTableStart(lines, index) {
+    const current = lines[index]?.trim() || "";
+    const next = lines[index + 1]?.trim() || "";
+    return current.startsWith("|") && next.startsWith("|") && /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(next);
+}
+
+function splitTableRow(row) {
+    return row.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((cell) => cell.trim());
+}
+
+function renderTable(headers, rows) {
+    const head = headers.map((cell) => `<th>${inlineMarkdown(cell)}</th>`).join("");
+    const body = rows.map((row) => `<tr>${row.map((cell) => `<td>${inlineMarkdown(cell)}</td>`).join("")}</tr>`).join("");
+    return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+function loadingView(text) {
+    return `<div class="loading"><div><div class="spinner"></div><div style="margin-top:10px">${text}</div></div></div>`;
+}
+
+function errorView(text) {
+    return `<div class="error">${escapeHtml(text)}</div>`;
+}
+
+function formatBytes(bytes) {
+    if (!bytes) return "-";
+    const units = ["B", "KB", "MB", "GB"];
+    const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+    return `${(bytes / Math.pow(1024, index)).toFixed(index ? 1 : 0)}${units[index]}`;
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
+// ==================== 鑱斿姩楂樹寒 ====================
+/* layout boxes are rendered from /parse blocks; no extra layout fetch is needed. */
+
+
+
+
+
+function renderSource(source, filename, blocks = []) {
+    if (!source) {
+        sourcePanel.innerHTML = '<div class="empty">No source preview</div>';
+        return;
+    }
+    if (source.type === "pdf") {
+        $("sourceHint").textContent = `1 / ${source.page_count}`;
+        const pageClass = source.converted_from === "docx" || source.converted_from === "ppt" ? "page office-page" : "page";
+        sourcePanel.innerHTML = source.images.map((img, index) => `
+            <div class="${pageClass}" data-page="${index}">
+                <img src="data:image/png;base64,${img}" alt="source page ${index + 1}" onload="drawPageBoxes(this)">
+                <div class="bbox-layer">${renderPageBoxes(index, blocks)}</div>
+                <div class="page-foot">Page ${index + 1}</div>
+            </div>
+        `).join("");
+        requestAnimationFrame(() => {
+            sourcePanel.querySelectorAll(".page img").forEach(drawPageBoxes);
+        });
+        return;
+    }
+    if (source.type === "image") {
+        $("sourceHint").textContent = filename || "image";
+        sourcePanel.innerHTML = `<div class="source-image"><img src="data:image/png;base64,${source.data}" alt="${escapeHtml(filename || "source file")}"></div>`;
+        return;
+    }
+    if (source.type === "spreadsheet") {
+        $("sourceHint").textContent = `${source.row_count || 0} rows`;
+        sourcePanel.innerHTML = renderSpreadsheetSource(source);
+        return;
+    }
+    if (source.type === "word") {
+        $("sourceHint").textContent = `${source.page_count || 1} pages`;
+        sourcePanel.innerHTML = renderWordSource(source);
+        return;
+    }
+    if (source.type === "word_html") {
+        $("sourceHint").textContent = "HTML preview";
+        sourcePanel.innerHTML = renderWordHtmlSource(source);
+        return;
+    }
+    if (source.type === "presentation") {
+        $("sourceHint").textContent = `${source.page_count || 0} slides`;
+        sourcePanel.innerHTML = renderPresentationSource(source);
+        return;
+    }
+    if (source.type === "onlyoffice") {
+        $("sourceHint").textContent = source.file_type || "office";
+        renderOnlyOfficeSource(source);
+        return;
+    }
+    $("sourceHint").textContent = filename || "text";
+    sourcePanel.innerHTML = `<pre>${escapeHtml(source.content || filename || "")}</pre>`;
+}
+
+function renderSpreadsheetSource(source) {
+    const rows = Array.isArray(source.rows) ? source.rows : [];
+    if (!rows.length) {
+        return `<div class="empty">${escapeHtml(source.content || "Spreadsheet preview is empty")}</div>`;
+    }
+    const note = "表格源文件完整预览";
+    const table = rows.map((row) => {
+        const cells = row.map((cell) => `<td title="${escapeHtml(cell)}">${escapeHtml(cell)}</td>`).join("");
+        return `<tr>${cells}</tr>`;
+    }).join("");
+    return `<div class="sheet-note">${note}</div><table class="sheet-preview"><tbody>${table}</tbody></table>`;
+}
+
+function renderWordSource(source) {
+    const blocks = Array.isArray(source.blocks) ? source.blocks : [];
+    if (!blocks.length) {
+        return `<div class="empty">${escapeHtml(source.content || "Word preview is empty")}</div>`;
+    }
+    const pages = [];
+    for (let i = 0; i < blocks.length; i += 28) {
+        pages.push(blocks.slice(i, i + 28));
+    }
+    return pages.map((pageBlocks, index) => {
+        const body = pageBlocks.map((block) => {
+            if (block.type === "table") {
+                const rows = (block.rows || []).map((row) => {
+                    const cells = row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("");
+                    return `<tr>${cells}</tr>`;
+                }).join("");
+                return `<table class="word-table"><tbody>${rows}</tbody></table>`;
+            }
+            return `<p>${escapeHtml(block.text || "")}</p>`;
+        }).join("");
+        return `<div class="word-page">${body}<div class="page-foot">Page ${index + 1}</div></div>`;
+    }).join("");
+}
+
+function renderWordHtmlSource(source) {
+    const html = source.html || "";
+    if (!html.trim()) {
+        return `<div class="empty">${escapeHtml(source.content || "Word preview is empty")}</div>`;
+    }
+    return `<div class="word-page word-html">${html}</div>`;
+}
+
+function renderPresentationSource(source) {
+    const slides = Array.isArray(source.slides) ? source.slides : [];
+    if (!slides.length) {
+        return `<div class="empty">${escapeHtml(source.content || "Presentation preview is empty")}</div>`;
+    }
+    return slides.map((slide, index) => {
+        const lines = Array.isArray(slide.texts) ? slide.texts : [];
+        const body = lines.length
+            ? lines.map((line) => `<p>${escapeHtml(line)}</p>`).join("")
+            : '<p class="panel-hint">该页没有可提取文本</p>';
+        return `<div class="slide-page"><h3>Slide ${index + 1}</h3>${body}</div>`;
+    }).join("");
+}
+
+function renderOnlyOfficeSource(source) {
+    const holderId = `onlyoffice-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    sourcePanel.innerHTML = `<div class="onlyoffice-host" id="${holderId}"></div>`;
+    loadOnlyOfficeApi(source.document_server)
+        .then(() => {
+            new DocsAPI.DocEditor(holderId, source.config);
+        })
+        .catch((error) => {
+            sourcePanel.innerHTML = errorView(error.message || "OnlyOffice 加载失败");
+        });
+}
+
+function loadOnlyOfficeApi(server) {
+    if (window.DocsAPI?.DocEditor) return Promise.resolve();
+    const apiUrl = `${String(server || "").replace(/\/$/, "")}/web-apps/apps/api/documents/api.js`;
+    const existing = document.querySelector(`script[data-onlyoffice-api="${apiUrl}"]`);
+    if (existing) {
+        return new Promise((resolve, reject) => {
+            existing.addEventListener("load", resolve, { once: true });
+            existing.addEventListener("error", () => reject(new Error("OnlyOffice API 加载失败")), { once: true });
+        });
+    }
+    return new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = apiUrl;
+        script.dataset.onlyofficeApi = apiUrl;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error(`OnlyOffice API 加载失败：${apiUrl}`));
+        document.head.appendChild(script);
+    });
+}
+
+function markdownToHtml(markdown) {
+    const lines = String(markdown || "").split(/\r?\n/);
+    const html = [];
+    let inCode = false;
+    let listType = null;
+    let paragraph = [];
+
+    const flushParagraph = () => {
+        if (!paragraph.length) return;
+        html.push(`<p>${inlineMarkdown(paragraph.join(" "))}</p>`);
+        paragraph = [];
+    };
+
+    const closeList = () => {
+        if (!listType) return;
+        html.push(`</${listType}>`);
+        listType = null;
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+        const raw = lines[i];
+        const line = raw.trim();
+
+        if (line.startsWith("```")) {
+            flushParagraph();
+            closeList();
+            html.push(inCode ? "</code></pre>" : "<pre><code>");
+            inCode = !inCode;
+            continue;
+        }
+
+        if (inCode) {
+            html.push(escapeHtml(raw) + "\n");
+            continue;
+        }
+
+        if (!line) {
+            flushParagraph();
+            closeList();
+            continue;
+        }
+
+        if (/^<details\b/i.test(line)) {
+            flushParagraph();
+            closeList();
+            const block = [raw];
+            while (i + 1 < lines.length && !/<\/details>/i.test(lines[i])) {
+                i += 1;
+                block.push(lines[i]);
+                if (/<\/details>/i.test(lines[i])) break;
+            }
+            html.push(renderDetailsBlock(block));
+            continue;
+        }
+
+        if (isRawHtmlBlock(line)) {
+            flushParagraph();
+            closeList();
+            html.push(raw);
+            continue;
+        }
+
+        if (isTableStart(lines, i)) {
+            flushParagraph();
+            closeList();
+            const headers = splitTableRow(lines[i]);
+            i += 1;
+            const rows = [];
+            while (i + 1 < lines.length && lines[i + 1].trim().startsWith("|")) {
+                rows.push(splitTableRow(lines[i + 1]));
+                i += 1;
+            }
+            html.push(renderTable(headers, rows));
+            continue;
+        }
+
+        const heading = line.match(/^(#{1,6})\s+(.+)$/);
+        if (heading) {
+            flushParagraph();
+            closeList();
+            const level = Math.min(heading[1].length, 3);
+            html.push(`<h${level}>${inlineMarkdown(heading[2])}</h${level}>`);
+            continue;
+        }
+
+        const unordered = line.match(/^\\?[-*]\s+(.+)$/);
+        if (unordered) {
+            flushParagraph();
+            if (listType !== "ul") {
+                closeList();
+                listType = "ul";
+                html.push("<ul>");
+            }
+            html.push(`<li>${inlineMarkdown(unordered[1])}</li>`);
+            continue;
+        }
+
+        const ordered = line.match(/^\d+\.\s+(.+)$/);
+        if (ordered) {
+            flushParagraph();
+            if (listType !== "ol") {
+                closeList();
+                listType = "ol";
+                html.push("<ol>");
+            }
+            html.push(`<li>${inlineMarkdown(ordered[1])}</li>`);
+            continue;
+        }
+
+        const imageMd = line.match(/^!\[([^\]]*)\]\((.+?)\)$/);
+        if (imageMd) {
+            flushParagraph();
+            closeList();
+            html.push(`<p><img src="${escapeHtml(imageMd[2])}" alt="${escapeHtml(imageMd[1])}"></p>`);
+            continue;
+        }
+
+        paragraph.push(line);
+    }
+
+    flushParagraph();
+    closeList();
+    if (inCode) html.push("</code></pre>");
+    return html.join("\n") || '<div class="empty">Markdown content is empty</div>';
+}
+
+function renderDetailsBlock(lines) {
+    const first = lines[0]?.trim() || "<details>";
+    const lastIsClose = /<\/details>/i.test(lines[lines.length - 1] || "");
+    const bodyLines = lines.slice(1, lastIsClose ? -1 : undefined);
+    const summaryIndex = bodyLines.findIndex((line) => /^<summary\b/i.test(line.trim()));
+    let summary = "";
+    let innerLines = bodyLines;
+
+    if (summaryIndex >= 0) {
+        summary = bodyLines[summaryIndex];
+        innerLines = bodyLines.slice(summaryIndex + 1);
+    }
+
+    const summaryText = summary.replace(/<[^>]*>/g, "").trim().toLowerCase();
+    const shouldCollapse = /^(line|bar|pie|scatter|area|chart|图表|折线图|柱状图|饼图)$/.test(summaryText);
+    const cleanDetailsTag = first.replace(/\sopen\b/i, "");
+    const detailsTag = shouldCollapse ? cleanDetailsTag : cleanDetailsTag.replace("<details", "<details open");
+    return `${detailsTag}
+${summary}
+<div class="details-body">
+${markdownToHtml(innerLines.join("\n"))}
+</div>
+</details>`;
+}
+
+function isRawHtmlBlock(line) {
+    return /^<\/?(table|thead|tbody|tr|td|th|img|br|hr|div|span|p)\b/i.test(line);
+}
+
+function renderResult(content, format) {
+    if (format === "json") {
+        resultPanel.innerHTML = `<pre>${escapeHtml(content)}</pre>`;
+        return;
+    }
+    if (format === "text") {
+        resultPanel.innerHTML = `<pre>${escapeHtml(content)}</pre>`;
+        return;
+    }
+    if (lastResult && Array.isArray(lastResult.content_blocks) && lastResult.content_blocks.length) {
+        resultPanel.innerHTML = `<div class="markdown-body">${renderContentBlocks(lastResult.content_blocks)}</div>`;
+        return;
+    }
+    resultPanel.innerHTML = `<div class="markdown-body">${markdownToHtml(content)}</div>`;
+    if (currentBlocks.length) {
+        requestAnimationFrame(() => markMarkdownBlocks(currentBlocks));
+    }
+}
+
+function renderMarkdownPreview() {
+    const markdown = resolveImageRefs(lastResult?.markdown_content || lastResult?.content || "");
+    if (window.marked?.parse) {
+        resultPanel.innerHTML = `<div class="markdown-body">${window.marked.parse(markdown, { breaks: true })}</div>`;
+        return;
+    }
+    resultPanel.innerHTML = `<div class="markdown-body">${markdownToHtml(markdown)}</div>`;
+}
+
+function renderContentBlocks(blocks) {
+    return blocks.map((block, index) => {
+        const type = String(block.type || "text").toLowerCase();
+        const attrs = `class="md-mark content-block" data-block="${index}" data-label="${index + 1}"`;
+        const text = resolveImageRefs(block.markdown || block.text || "");
+        const html = resolveImageRefs(block.html || "");
+        const image = resolveImageUrl(block.image || "");
+
+        if (image && (type.includes("image") || type.includes("chart") || type.includes("figure"))) {
+            const detail = text ? `<details><summary>${escapeHtml(type)}</summary>${markdownToHtml(text)}</details>` : "";
+            return `<section ${attrs}><p><img src="${escapeHtml(image)}" alt="${escapeHtml(text.slice(0, 80))}"></p>${detail}</section>`;
+        }
+
+        if (html && (type.includes("table") || /^<table/i.test(html.trim()))) {
+            return `<section ${attrs}>${html}</section>`;
+        }
+
+        if (type.includes("table") && text) {
+            return `<section ${attrs}>${markdownToHtml(text)}</section>`;
+        }
+
+        if (text) {
+            return `<section ${attrs}>${markdownToHtml(text)}</section>`;
+        }
+
+        if (image) {
+            return `<section ${attrs}><p><img src="${escapeHtml(image)}" alt=""></p></section>`;
+        }
+
+        return "";
+    }).join("");
+}
+
+function resolveImageUrl(path) {
+    const value = String(path || "");
+    if (!value || /^(https?:|data:)/i.test(value)) return value;
+    const urls = lastResult?.image_urls || {};
+    const clean = value.replace(/^\.?\//, "");
+    const name = clean.split("/").pop();
+    return urls[value] || urls[clean] || urls[name] || urls[`images/${name}`] || value;
+}
+
+function resolveImageRefs(value) {
+    let result = String(value || "");
+    if (!result || !lastResult?.image_urls) return result;
+    Object.keys(lastResult.image_urls)
+        .sort((a, b) => b.length - a.length)
+        .forEach((path) => {
+            const url = lastResult.image_urls[path];
+            const clean = path.replace(/^\.?\//, "");
+            const name = clean.split("/").pop();
+            [path, clean, name, `./${clean}`, `./${name}`].forEach((ref) => {
+                if (!ref || /^(https?:|data:)/i.test(ref)) return;
+                const escaped = ref.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+                result = result.replace(new RegExp(`\\]\\(${escaped}\\)`, "g"), `](${url})`);
+                result = result.replace(new RegExp(`src="${escaped}"`, "g"), `src="${url}"`);
+                result = result.replace(new RegExp(`src='${escaped}'`, "g"), `src='${url}'`);
+            });
+        });
+    return result;
+}
+
+const markedScript = document.createElement("script");
+markedScript.src = "https://cdn.jsdelivr.net/npm/marked/marked.min.js";
+markedScript.onload = () => { markedReady = true; };
+markedScript.onerror = () => { markedReady = false; };
+document.head.appendChild(markedScript);
+
+</script>
+</body>
+</html>
